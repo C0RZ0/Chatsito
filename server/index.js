@@ -17,7 +17,9 @@ io.on("connection", (socket) => {
     socket.emit("bienvenida", "Hola a todos los clientes conectados")
 
     socket.on("mensaje", (mensaje) => {
-        console.log("Recibi el mensaje: ", mensaje)
+        io.emit("mensaje", mensaje)
+
+        socket.broadcast.emit("mensaje", mensaje)
     })
 })
 
