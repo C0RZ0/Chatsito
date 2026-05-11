@@ -1,12 +1,28 @@
+import { useEffect } from "react"
 import {useState} from "react"
+import {io} from "socket.io-client"
 
 function App() {
-const [inputMEssage, setInputMessage] = useState("")
 
+const [inputMessage, setInputMessage] = useState("")
+const [mensajeRecibido, setMensajeRecibido] = useState([])
+const [socket, setSocket] = useState()
+
+useEffect(() => {
+  const newSocket = io("localhost:3000")
+  setSocket(newSocket)
+
+  newSocket.on("mensaje", (msj) => {
+    setMensajeRecibido(msj)
+  })
+
+  return() => {newSocket.disconnect()}
+}, [])
 
 const handleSubmit = (e) => {
   e.preventDefault()
   //Como se envian los mensajes al servidor
+  socket.emit("mensaje", inputMessage)
 }
 
   return (
@@ -15,6 +31,7 @@ const handleSubmit = (e) => {
         <input onChange={(e) => setInputMessage(e.target.value)}/>
         <button type="submit">Enviar</button>
       </form>
+      {mensajeRecibido.map(mensaje => <div>{mensaje}</div>)}
     </div>
   )
 

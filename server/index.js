@@ -11,15 +11,17 @@ const io = new Server(server, {
     }
 })
 
+const mensajes = []
 io.on("connection", (socket) => {
     console.log("Un cliente se ha conectado")
     //mensaje a todos
     socket.emit("bienvenida", "Hola a todos los clientes conectados")
 
     socket.on("mensaje", (mensaje) => {
-        io.emit("mensaje", mensaje)
+        //io.emit("mensaje", mensaje)
 
-        socket.broadcast.emit("mensaje", mensaje)
+        mensajes.push(mensaje)
+        io.emit("mensaje", mensajes)
     })
 })
 
