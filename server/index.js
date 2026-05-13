@@ -20,8 +20,15 @@ io.on("connection", (socket) => {
 
     socket.on("mensaje", (mensaje) => {
         //io.emit("mensaje", mensaje)
+        const mensajeConHora = {
+            ...mensaje,
+            hora: new Date().toLocaleTimeString("es-MX", {
+                hour: "2-digit",
+                minute: "2-digit",
+            }),
+        }
 
-        mensajes.push(mensaje)
+        mensajes.push(mensajeConHora)
         io.emit("mensaje", mensajes)
     })
 })

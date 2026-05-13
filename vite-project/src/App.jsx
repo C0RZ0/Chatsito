@@ -35,7 +35,11 @@ const handleSubmit = (e) => {
         <button type="submit">Enviar</button>
       </form>
       {
-        mensajeRecibido.map(mensaje => <div>{mensaje.user}: {mensaje.inputMessage}</div>)
+        mensajeRecibido.map((mensaje, index) => (
+          <div key={`${mensaje.user}-${mensaje.hora}-${index}`}>
+            {mensaje.user}: {mensaje.inputMessage} ({mensaje.hora})
+          </div>
+        ))
       }
     </div>
   )
