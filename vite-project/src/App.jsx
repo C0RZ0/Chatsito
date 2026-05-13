@@ -1,49 +1,68 @@
-import { useEffect } from "react"
-import {useState} from "react"
-import {io} from "socket.io-client"
+import { useEffect, useRef, useState } from "react"
+import { io } from "socket.io-client"
+import "./App.css"
+
+const SOCKET_URL = `${window.location.protocol}//${window.location.hostname}:3000`
 
 function App() {
+  const [inputMessage, setInputMessage] = useState("")
+  const [mensajeRecibido, setMensajeRecibido] = useState([])
+  const [user] = useState(() => prompt("Ingrese su nombre:")?.trim() || "Anonimo")
+  const socketRef = useRef(null)
 
-const [inputMessage, setInputMessage] = useState("")
-const [mensajeRecibido, setMensajeRecibido] = useState([])
-const [socket, setSocket] = useState()
-const [user, setUser] = useState("")
+  useEffect(() => {
+    const newSocket = io(SOCKET_URL)
+    socketRef.current = newSocket
 
-useEffect(() => {
-  const newSocket = io("localhost:3000")
-  setSocket(newSocket)
+    const handleMensaje = (msj) => {
+      setMensajeRecibido(msj)
+    }
 
-  newSocket.on("mensaje", (msj) => {
-    setMensajeRecibido(msj)
-  })
+    newSocket.on("mensaje", handleMensaje)
 
-  setUser(prompt("Ingrese su nombre:"))
+    return () => {
+      newSocket.off("mensaje", handleMensaje)
+      newSocket.disconnect()
+    }
+  }, [])
 
-  return() => {newSocket.disconnect()}
-}, [])
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    const mensajeLimpio = inputMessage.trim()
+    if (!mensajeLimpio || !socketRef.current) return
 
-const handleSubmit = (e) => {
-  e.preventDefault()
-  //Como se envian los mensajes al servidor
-  socket.emit("mensaje", {user, inputMessage})
-}
+    socketRef.current.emit("mensaje", { user, inputMessage: mensajeLimpio })
+    setInputMessage("")
+  }
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <input onChange={(e) => setInputMessage(e.target.value)}/>
-        <button type="submit">Enviar</button>
-      </form>
-      {
-        mensajeRecibido.map((mensaje, index) => (
-          <div key={`${mensaje.user}-${mensaje.hora}-${index}`}>
-            {mensaje.user}: {mensaje.inputMessage} ({mensaje.hora})
-          </div>
-        ))
-      }
-    </div>
+    <main className="chat-page">
+      <section className="chat-card">
+        <h1>Chatsito</h1>
+        <form className="chat-form" onSubmit={handleSubmit}>
+          <input
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Escribe tu mensaje"
+            required
+          />
+          <button type="submit">Enviar</button>
+        </form>
+        <div className="messages-list">
+          {mensajeRecibido.map((mensaje, index) => (
+            <article
+              className={`message-bubble ${mensaje.user === user ? "mine" : ""}`}
+              key={`${mensaje.user}-${mensaje.hora}-${mensaje.inputMessage}-${index}`}
+            >
+              <span className="message-author">{mensaje.user}</span>
+              <p className="message-text">{mensaje.inputMessage}</p>
+              <span className="message-time">{mensaje.hora ?? "--:--"}</span>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
   )
-
 }
 
 export default App
